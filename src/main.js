@@ -3,7 +3,6 @@ import './style/less.less';
 import './style/icon.css'
 
 document.title = '哈哈'
-
 // import yeye from './assets/imgs/yeye.png'
 let yeye = require('./assets/imgs/yeye.png')
 let img = document.createElement('img');

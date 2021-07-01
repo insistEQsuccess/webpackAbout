@@ -8,21 +8,23 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 // 压缩 js 配置了： optimization -> minimizer 后，原有的压缩js就被破坏了，需要重新配置
 const TerserJSPlugin = require('terser-webpack-plugin');
+// 不需要打包的文件，直接拷贝到目标文件夹里
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: {
-        main: './src/main.js'
+        main: './src/main.js',
+        index: './src/index.js'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.js',
+        filename: '[name].[chunkhash:8].js',
     },
     mode: 'production',
     devtool: 'eval-cheap-module-source-map',
     devServer: {
         host: 'localhost',
-        port: 8000,
-        open: true
+        port: 8000
     },
     optimization: {
         minimizer: [
@@ -88,20 +90,25 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env'],
+                        presets: ['@babel/preset-env','@babel/preset-react'],
                         plugins: [
-                            '@babel/plugin-transform-runtime'
+                            '@babel/plugin-transform-runtime',
                         ]
                     }
                 }
             },
-            {
-                test: /\.html$/i,
-                loader: 'html-loader',
-                options:{
-                    esModule:false,
-                }
-            }
+            // {
+            //     test: require.resolve("jquery"),
+            //     loader: "expose-loader",
+            //     options: "$",
+            // },
+            // {
+            //     test: /\.html$/i,
+            //     loader: 'html-loader',
+            //     options:{
+            //         esModule:false,
+            //     }
+            // }
         ]
     },
     plugins: [
@@ -114,6 +121,15 @@ module.exports = {
         }),
         new webpack.BannerPlugin({
             banner: '我是一段注释'
-        })
+        }),
+        new CopyPlugin({
+            patterns: [
+                { from: "static", to: "static" }
+            ],
+        }),
+        // 第三方库的引入方式，给每个模块注入 $ 对象
+        // new webpack.ProvidePlugin({
+        //     $:'jquery'
+        // })
     ]
 }
