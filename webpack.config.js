@@ -1,4 +1,5 @@
 const path= require('path');
+const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 // 提取css文件
@@ -17,6 +18,7 @@ module.exports = {
         filename: 'bundle.js',
     },
     mode: 'production',
+    devtool: 'eval-cheap-module-source-map',
     devServer: {
         host: 'localhost',
         port: 8000,
@@ -34,7 +36,13 @@ module.exports = {
                 test: /\.css$/,
                 // use: ['style-loader', 'css-loader', 'postcss-loader']
                 use: [
-                    MiniCssExtractPlugin.loader, 'css-loader',
+                    {
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: '../'
+                        }
+                    },
+                    'css-loader',
                     // css属性加前缀
                     /*
                         1. 建一个 postcss.config.js
@@ -50,15 +58,49 @@ module.exports = {
             {
                 test: /\.less$/,
                 // use: ['style-loader', 'css-loader', 'postcss-loader', 'less-loader']
-                use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader']
+                use: [
+                    {
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: '../'
+                        }
+                    }, 'css-loader', 'postcss-loader', 'less-loader']
             },
+            {test: /\.(svg|ttf)/i, use: ['url-loader']},
             {
                 test: /\.(png|jpg|jpeg|gif)$/i,
                 use: [
                     {
                         loader: 'url-loader',
+                        options: {
+                            limit: 10,
+                            name: './images/[name].[hash:8].[ext]'
+                        }
                     },
                 ],
+            },
+            {
+                /*
+                babel-loader 会使用 babel-core 的 API并按照 preset-env 的转换规则，把js转换为 es5等
+                */
+                test: /\.m?js$/,
+                exclude: /(node_modules|bower_components)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env'],
+                        plugins: [
+                            '@babel/plugin-transform-runtime'
+                        ]
+                    }
+                }
+            },
+            {
+                test: /\.html$/i,
+                loader: 'html-loader',
+                options:{
+                    esModule:false,
+                }
             }
         ]
     },
@@ -70,5 +112,8 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: './css/[name].css'
         }),
+        new webpack.BannerPlugin({
+            banner: '我是一段注释'
+        })
     ]
 }
